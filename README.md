@@ -18,10 +18,10 @@ DO NOT USE IN PRODUCTION.
 
 The following challenges contain my solutions.
 
-#	Name	
-1	Unstoppable
-2	Naive receiver
-3	Truster
-4	Side entrance
-5	The rewarder
+#	Name \n	
+1	Unstoppable \n
+2	Naive receiver \n
+3	Truster \n
+4	Side entrance \n
+5	The rewarder \n
 6	Selfie
