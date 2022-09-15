@@ -5,6 +5,10 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "./SideEntranceLenderPool.sol";
 import "hardhat/console.sol";
 
+/**
+ * @title FlashLoanEtherReceiver
+ * @author Luciana Silva
+ */
 contract FlashLoanEtherReceiver {
     //enable this to use the sendValue
     //using Address for address payable;

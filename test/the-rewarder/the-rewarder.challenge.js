@@ -77,8 +77,8 @@ describe('[Challenge] The rewarder', function () {
             this.rewarderPool.address, attacker.address
         );
 
-        // Advance time 1 days so that depositors can get rewards
-        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 1 day
+        // Advance time 5 days so that depositors can get rewards
+        await ethers.provider.send("evm_increaseTime", [5 * 24 * 60 * 60]); // 5 day
 
         await attackRewarder.attack(TOKENS_IN_LENDER_POOL, this.rewardToken.address);
 

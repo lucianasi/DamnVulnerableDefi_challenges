@@ -8,6 +8,10 @@ import "../DamnValuableToken.sol";
 import "./FlashLoanerPool.sol";
 import "./TheRewarderPool.sol";
 
+/**
+ * @title AttackRewarder
+ * @author Luciana Silva
+ */
 contract AttackRewarder {
     using Address for address;
 

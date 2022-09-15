@@ -8,6 +8,10 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "hardhat/console.sol";
 import "./TrusterLenderPool.sol";
 
+/**
+ * @title Attacker
+ * @author Luciana Silva
+ */
 contract Attacker {
     function attack(
         address attacker,
