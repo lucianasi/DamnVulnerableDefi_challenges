@@ -13,3 +13,15 @@ Visit [damnvulnerabledefi.xyz](https://damnvulnerabledefi.xyz)
 All Solidity code, practices and patterns in this repository are DAMN VULNERABLE and for educational purposes only.
 
 DO NOT USE IN PRODUCTION.
+
+------------------
+
+The following challenges contain my solutions.
+
+#	Name	
+1	Unstoppable
+2	Naive receiver
+3	Truster
+4	Side entrance
+5	The rewarder
+6	Selfie
