@@ -31,3 +31,5 @@ DO NOT USE IN PRODUCTION.
 5	The rewarder 
 
 6	Selfie
+
+7	Compromised
