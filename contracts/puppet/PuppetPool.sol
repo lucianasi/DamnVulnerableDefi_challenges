@@ -4,22 +4,26 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "../DamnValuableToken.sol";
+import "hardhat/console.sol";
 
 /**
  * @title PuppetPool
  * @author Damn Vulnerable DeFi (https://damnvulnerabledefi.xyz)
  */
 contract PuppetPool is ReentrancyGuard {
-
     using Address for address payable;
 
     mapping(address => uint256) public deposits;
     address public immutable uniswapPair;
     DamnValuableToken public immutable token;
-    
-    event Borrowed(address indexed account, uint256 depositRequired, uint256 borrowAmount);
 
-    constructor (address tokenAddress, address uniswapPairAddress) {
+    event Borrowed(
+        address indexed account,
+        uint256 depositRequired,
+        uint256 borrowAmount
+    );
+
+    constructor(address tokenAddress, address uniswapPairAddress) {
         token = DamnValuableToken(tokenAddress);
         uniswapPair = uniswapPairAddress;
     }
@@ -27,9 +31,12 @@ contract PuppetPool is ReentrancyGuard {
     // Allows borrowing `borrowAmount` of tokens by first depositing two times their value in ETH
     function borrow(uint256 borrowAmount) public payable nonReentrant {
         uint256 depositRequired = calculateDepositRequired(borrowAmount);
-        
-        require(msg.value >= depositRequired, "Not depositing enough collateral");
-        
+
+        require(
+            msg.value >= depositRequired,
+            "Not depositing enough collateral"
+        );
+
         if (msg.value > depositRequired) {
             payable(msg.sender).sendValue(msg.value - depositRequired);
         }
@@ -42,17 +49,30 @@ contract PuppetPool is ReentrancyGuard {
         emit Borrowed(msg.sender, depositRequired, borrowAmount);
     }
 
-    function calculateDepositRequired(uint256 amount) public view returns (uint256) {
-        return amount * _computeOraclePrice() * 2 / 10 ** 18;
+    function calculateDepositRequired(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        return (amount * _computeOraclePrice() * 2) / 10**18;
     }
 
     function _computeOraclePrice() private view returns (uint256) {
         // calculates the price of the token in wei according to Uniswap pair
-        return uniswapPair.balance * (10 ** 18) / token.balanceOf(uniswapPair);
+        /*     console.log(
+            "Dentro do contrato: \nuniswapPair.balance: ",
+            uniswapPair.balance,
+            "\ntoken.balanceOf  ",
+            token.balanceOf(uniswapPair)
+        );
+        console.log(
+            "\nconta ",
+            (uniswapPair.balance * (10**18)) / token.balanceOf(uniswapPair)
+        );*/
+        return (uniswapPair.balance * (10**18)) / token.balanceOf(uniswapPair);
     }
 
-     /**
+    /**
      ... functions to deposit, redeem, repay, calculate interest, and so on ...
      */
-
 }

