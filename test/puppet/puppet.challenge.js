@@ -11,21 +11,6 @@ function calculateTokenToEthInputPrice(tokensSold, tokensInReserve, etherInReser
     )
 }
 
-async function printAccountsStatus(token, attacker, lendingPool, uniswapExchange, POOL_INITIAL_TOKEN_BALANCE) {
-    let tokenBalance = ethers.utils.formatEther(await token.balanceOf(attacker.address));
-    let ethBalance = ethers.utils.formatEther(await ethers.provider.getBalance(attacker.address));
-    let tokenBalanceLendingPool = ethers.utils.formatEther(await token.balanceOf(lendingPool.address));
-    let depositRequired = await lendingPool.calculateDepositRequired(POOL_INITIAL_TOKEN_BALANCE);
-    let depositRequiredFormatted = ethers.utils.formatEther(depositRequired);
-
-    console.log("\nLending Pool Balance: ", tokenBalanceLendingPool);
-    console.log("Deposit required for 100k: ", depositRequiredFormatted,
-        "\nAttacker Balance in Token: ", tokenBalance,
-        "\nAttacker balance in ETH: ", ethBalance,
-        "\nUniswap exchange balance: ", ethers.utils.formatEther(await this.token.balanceOf(uniswapExchange.address))
-    );
-}
-
 describe('[Challenge] Puppet', function () {
     let deployer, attacker;
 
